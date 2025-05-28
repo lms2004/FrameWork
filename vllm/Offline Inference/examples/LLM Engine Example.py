@@ -39,9 +39,10 @@ def process_requests(engine: LLMEngine, test_prompts: list[tuple[str, SamplingPa
             engine.add_request(str(request_id), prompt, sampling_params)
             request_id += 1
 
-        request_outputs: list[RequestOutput] = engine.step()
+        request_outputs: list[RequestOutput] = engine.step() # 每次生成一个token
 
         for request_output in request_outputs:
+            # 当前请求完成，输出结果
             if request_output.finished:
                 print(request_output)
                 print("-" * 50)
@@ -49,6 +50,14 @@ def process_requests(engine: LLMEngine, test_prompts: list[tuple[str, SamplingPa
 
 def initialize_engine(args: argparse.Namespace) -> LLMEngine:
     """Initialize the LLMEngine from the command line arguments."""
+
+    # Namespace() -> 创建命名空间对象。
+    #   1. 命名空间对象是一种轻量级的容器，用于存储变量和属性。
+    #   2. 它类似于字典，但可以使用点操作符来访问和设置属性
+
+    # 修改模型路径: facebook/opt-125m -> 本地 ./models
+    args.model = "./models"  # 修改模型路径为本地 ./models
+
     engine_args = EngineArgs.from_cli_args(args)
     return LLMEngine.from_engine_args(engine_args)
 
@@ -58,8 +67,10 @@ def parse_args():
         description="Demo on using the LLMEngine class directly"
     )
 
-    parser = EngineArgs.add_cli_args(parser)
-    return parser.parse_args()
+    # add_cli_args 创建新 ModelConfig 默认对象(修改不了) -> add_argument -> parse_args
+    parser = EngineArgs().add_cli_args(parser) 
+
+    return parser.parse_args() # 设置默认参数
 
 
 def main(args: argparse.Namespace):

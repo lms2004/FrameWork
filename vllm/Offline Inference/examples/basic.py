@@ -14,11 +14,9 @@ sampling_params = SamplingParams(temperature=0.8, top_p=0.95)
 
 
 def main():
-    # Create an LLM.
-    llm = LLM(model="facebook/opt-125m")
-    # Generate texts from the prompts.
-    # The output is a list of RequestOutput objects
-    # that contain the prompt, generated text, and other information.
+    # For Hugging Face models: ensure the presence of a 'config.json'.
+    llm = LLM(model="./models")
+
     outputs = llm.generate(prompts, sampling_params)
     # Print the outputs.
     print("\nGenerated Outputs:\n" + "-" * 60)
