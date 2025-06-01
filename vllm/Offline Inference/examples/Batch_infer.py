@@ -39,6 +39,9 @@ read_text
         # 读取多个本地文件
         ds = ray.data.read_text(["local:///path/to/file1", "local:///path/to/file2"])
     return Dataset
+
+Dataset
+    https://docs.ray.io/en/latest/data/api/dataset.html
 """
 # 优化后的读取方式（添加关键参数）
 ds = ray.data.read_text(
@@ -47,7 +50,7 @@ ds = ray.data.read_text(
     drop_empty_lines=False,      # 保留空行（根据需求调整）
     encoding="utf-8",            # 显式指定编码（默认就是utf-8）
     ignore_missing_paths=True    # 避免路径不存在时报错
-)
+) #     输出格式：{'text': '行内容', 'path': '文件路径'}
 
 """
 vLLMEngineProcessorConfig
@@ -113,22 +116,19 @@ def __call__(self, dataset: Dataset) -> Dataset:
 
         Returns:
             The output dataset.
-"""
+""" # 分布式推理
 ds = vllm_processor(ds)
 
-# Peek first 10 results.
-# NOTE: This is for local testing and debugging. For production use case,
-# one should write full result out as shown below.
-outputs = ds.take(limit=10)
+"""
+Dataset.take(limit: int = 20) → List[Dict[str, Any]][source] / take_all
+    Return up to limit rows from the Dataset.
+
+    This method is useful for inspecting data.
+"""
+outputs = ds.take_all()
 
 for output in outputs:
     prompt = output["prompt"]
     generated_text = output["generated_text"]
     print(f"Prompt: {prompt!r}")
     print(f"Generated text: {generated_text!r}")
-
-# Write inference output data out as Parquet files to S3.
-# Multiple files would be written to the output destination,
-# and each task would write one or more files separately.
-#
-# ds.write_parquet("s3://<your-output-bucket>")
