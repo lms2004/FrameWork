@@ -44,7 +44,7 @@ from vllm.sampling_params import SamplingParams
 #     python demo.py simple
 #     python demo.py advanced
 
-model_name = "/hy-tmp/FrameWork/models/ministral/Ministral-3b-instruct"
+model_name = "/hy-tmp/FrameWork/models/deepseek-ai/DeepSeek-R1-0528-Qwen3-8B"
 # or switch to "mistralai/Mistral-Nemo-Instruct-2407"
 # or "mistralai/Mistral-Large-Instruct-2407"
 # or any other mistral model with function calling ability
@@ -66,8 +66,13 @@ LLM (use Interface) -> LLMEngine(developer Interface)
             back to the eager mode.
         5. tensor_parallel_size: The number of GPUs to use for distributed
             execution with tensor parallelism.
+        6  gpu_memory_utilization: The ratio (between 0 and 1) of GPU memory to
+            reserve for the model weights, activations, and KV cache. Higher
+            values will increase the KV cache size and thus improve the model's
+            throughput. However, if the value is too high, it may cause out-of-
+            memory (OOM) errors. (需要微调 0.6 -> 0.7 跑通 DeepSeek-R1-0528-Qwen3-8B)
 """
-llm = LLM(model=model_name, tensor_parallel_size=2)
+llm = LLM(model=model_name, max_seq_len_to_capture=128,tensor_parallel_size=2, gpu_memory_utilization=0.8)
 
 
 def generate_random_id(length=9):
@@ -120,7 +125,7 @@ tools = [
 messages = [
     {
         "role": "user",
-        "content": "Can you tell me what the temperate will be in Dallas, in fahrenheit?do not repeat word",
+        "content": "Can you tell me what the temperate will be in Dallas, in fahrenheit?",
     }
 ]
 
@@ -136,7 +141,9 @@ messages.append(
 )
 
 """
-    实际测试 Ministral-3b-instruct
+    实际测试 
+        1. Ministral-3b-instruct 不满足 chat withtools 的要求，重复生成单词
+        2. DeepSeek-R1-0528-Qwen3-8B ：虽然得到正确答案，但是不能按照要求输出 json 格式(没有 function call 能力)
 """
 tool_calls = json.loads(output)
 tool_answers = [
