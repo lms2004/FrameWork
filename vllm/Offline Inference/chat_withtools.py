@@ -44,7 +44,7 @@ from vllm.sampling_params import SamplingParams
 #     python demo.py simple
 #     python demo.py advanced
 
-model_name = "./dir"
+model_name = "/hy-tmp/FrameWork/models/ministral/Ministral-3b-instruct"
 # or switch to "mistralai/Mistral-Nemo-Instruct-2407"
 # or "mistralai/Mistral-Large-Instruct-2407"
 # or any other mistral model with function calling ability
@@ -64,8 +64,10 @@ LLM (use Interface) -> LLMEngine(developer Interface)
             to eager mode. Additionally for encoder-decoder models, if the
             sequence length of the encoder input is larger than this, we fall
             back to the eager mode.
+        5. tensor_parallel_size: The number of GPUs to use for distributed
+            execution with tensor parallelism.
 """
-llm = LLM(model=model_name, max_seq_len_to_capture=256) 
+llm = LLM(model=model_name, tensor_parallel_size=2)
 
 
 def generate_random_id(length=9):
@@ -118,7 +120,7 @@ tools = [
 messages = [
     {
         "role": "user",
-        "content": "Can you tell me what the temperate will be in Dallas, in fahrenheit?",
+        "content": "Can you tell me what the temperate will be in Dallas, in fahrenheit?do not repeat word",
     }
 ]
 
@@ -133,8 +135,9 @@ messages.append(
     }
 )
 
-# let's now actually parse and execute the model's output simulating an API call by using the
-# above defined function
+"""
+    实际测试 Ministral-3b-instruct
+"""
 tool_calls = json.loads(output)
 tool_answers = [
     tool_functions[call["name"]](**call["arguments"]) for call in tool_calls
