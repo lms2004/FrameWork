@@ -1,0 +1,63 @@
+以下是 ray.data.read_text 函数的核心使用要点概括（基于官方文档）：
+
+📚 一、核心功能
+
+从文本文件（或文件列表）逐行读取数据，创建分布式数据集（Dataset）。  
+示例：
+import ray
+读取远程文件
+
+ds = ray.data.read_text("s3://anonymous@ray-example-data/this.txt")
+读取多个本地文件
+
+ds = ray.data.read_text(["local:///path/to/file1", "local:///path/to/file2"])
+
+⚙️ 二、关键参数详解
+参数               说明
+
+paths 支持单个文件/目录路径，或路径列表（可混合文件与目录）。
+encoding 文件编码（默认 utf-8）。
+filesystem 指定PyArrow文件系统（如S3、HDFS），默认根据路径协议自动选择。
+include_paths 设为 True 时，在结果中添加 path 列记录文件来源路径。
+ignore_missing_paths 设为 True 时忽略不存在路径，避免读取中断（默认 False）。
+shuffle 支持 "files" 或 FileShuffleConfig，实现读取前文件顺序随机打乱。
+file_extensions 过滤文件扩展名（如 [".txt", ".log"]）。
+concurrency 控制并发任务数，动态调节资源利用率。
+override_num_blocks 替代旧版 parallelism，手动指定输出块数量（通常无需设置）。
+
+⚠️ 三、注意事项
+返回值：  
+
+   生成 Dataset 对象，每行为一个文本记录（字段名默认为 "text"）。
+分区控制：  
+
+使用 partition_filter 筛选特定分区数据。
+
+partitioning 参数定义路径的分区结构（如按日期目录分层）。
+资源管理：  
+
+ray_remote_args 传递资源需求（如 {"num_cpus": 2}）。
+
+通过 arrow_open_stream_args 自定义文件打开行为。
+空行处理：  
+
+   drop_empty_lines=True（默认）自动跳过空行。
+
+💡 四、典型场景
+
+示例：读取S3文本并保留文件路径
+
+ds = ray.data.read_text(
+    "s3://my-bucket/logs/",
+    include_paths=True,
+    file_extensions=[".log"],
+    shuffle="files"  # 打乱文件顺序
+)
+输出结构：{"text": "日志内容", "path": "s3://my-bucket/logs/file1.log"}
+
+❗ 五、重要更新
+废弃参数：parallelism 已由 override_num_blocks 替代。
+
+元数据提供器：meta_provider 参数已弃用，系统自动优化元数据解析。
+
+完整文档详见 https://docs.ray.io/en/latest/data/api/doc/ray.data.read_text.html。
